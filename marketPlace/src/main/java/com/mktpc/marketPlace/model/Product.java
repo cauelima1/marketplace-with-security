@@ -1,6 +1,5 @@
 package com.mktpc.marketPlace.model;
 
-import com.mktpc.marketPlace.service.ProductService;
 import jakarta.persistence.*;
 
 @Entity
@@ -15,18 +14,18 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     private CategoryProduct categoryProduct;
-    private Long quant;
+    private Long stock;
     private double priceProduct;
 
     public Product (){
     }
 
-    public Product(Long id, String name, String productDetails, CategoryProduct categoryProduct, Long quant, double priceProduct) {
+    public Product(Long id, String name, String productDetails, CategoryProduct categoryProduct, Long stock, double priceProduct) {
         this.id = id;
         this.name = name;
         this.productDetails = productDetails;
         this.categoryProduct = categoryProduct;
-        this.quant = quant;
+        this.stock = stock;
         this.priceProduct = priceProduct;
     }
 
@@ -62,12 +61,12 @@ public class Product {
         this.categoryProduct = categoryProduct;
     }
 
-    public Long getQuant() {
-        return quant;
+    public Long getStock() {
+        return stock;
     }
 
-    public void setQuant(Long quant) {
-        this.quant = quant;
+    public void setStock(Long stock) {
+        this.stock = stock;
     }
 
     public double getPriceProduct() {

@@ -1,6 +1,7 @@
 package com.mktpc.marketPlace.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 import java.util.ArrayList;
@@ -14,19 +15,23 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
-    @OneToOne
+
+    @ManyToOne
+    @JoinColumn(name ="client_id")
+    @JsonBackReference
     private Client client;
+
     @OneToMany
     private List<OrderItem> orderItems = new ArrayList<>();
     private double totalPrice;
-    private boolean orderStatus;
+    private boolean orderFinish;
 
     public Order(UUID uuid, Client client, List<OrderItem> productList, double totalPrice, boolean status) {
         this.uuid = uuid;
         this.client = client;
         this.orderItems = orderItems;
         this.totalPrice = totalPrice;
-        this.orderStatus = status;
+        this.orderFinish = status;
     }
 
     public Order() {
@@ -65,11 +70,11 @@ public class Order {
         this.totalPrice = totalPrice;
     }
 
-    public boolean isOrderStatus() {
-        return orderStatus;
+    public boolean isOrderFinish() {
+        return orderFinish;
     }
 
-    public void setOrderStatus(boolean orderStatus) {
-        this.orderStatus = orderStatus;
+    public void setOrderFinish(boolean orderFinish) {
+        this.orderFinish = orderFinish;
     }
 }

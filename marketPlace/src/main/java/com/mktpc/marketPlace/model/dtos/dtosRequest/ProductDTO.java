@@ -1,4 +1,4 @@
-package com.mktpc.marketPlace.model.dtos;
+package com.mktpc.marketPlace.model.dtos.dtosRequest;
 
 import com.mktpc.marketPlace.model.CategoryProduct;
 

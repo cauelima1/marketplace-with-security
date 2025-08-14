@@ -2,6 +2,7 @@ package com.mktpc.marketPlace.security;
 
 import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.repository.ClientRepository;
+import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -29,6 +30,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private ClientOrderService clientOrderService;
 
     @Value("${jwt.secret}")
     private String secret;
@@ -59,23 +63,11 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
             Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
-
-//          Client newClient = new Client();
-//
-//          newClient.setName(username);
-//          clientRepository.save(newClient);
-
-
-//            System.out.println("Usuário autenticado: " + newClient.getName());
-//            System.out.println("Role extraída: " + role);
-//            System.out.println("Authorities: " + authorities);
-//            System.out.println("SecurityContext: " + SecurityContextHolder.getContext().getAuthentication());
-
-
         } catch (JwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+        clientOrderService.firstLogin();
         chain.doFilter(request, response);
     }
 

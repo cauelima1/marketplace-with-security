@@ -1,4 +1,4 @@
-package com.mktpc.marketPlace.service;
+package com.mktpc.marketPlace.service.clientServices;
 
 import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.repository.ClientRepository;
@@ -9,23 +9,25 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ClientService {
+public class ClientOrderService {
 
     @Autowired
     private ClientRepository clientRepository;
 
-    public Client createAndDeposite(Double value){
-        if (clientRepository.existsByName(getLogin()) && value > 0) {
+    public void depositToClient(Double value){
+        if(value >= 0) {
             Client client = clientRepository.findByName(getLogin());
             client.setBalance(client.getBalance() + value);
             clientRepository.save(client);
-            return client;
-        } if (!clientRepository.existsByName(getLogin())){
-            Client client = new Client(getLogin(), value, null);
-            clientRepository.save(client);
-            return client;
+        } else {
+            throw new RuntimeException("Invalid deposit value.");
         }
-        return null;
+    }
+
+
+    public void firstLogin() {
+        Client client = new Client(getLogin(), 0.0, null);
+        clientRepository.save(client);
     }
 
     public List<Client> getClients (){

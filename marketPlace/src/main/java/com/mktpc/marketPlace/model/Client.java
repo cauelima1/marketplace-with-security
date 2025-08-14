@@ -11,7 +11,7 @@ public class Client {
     @Id
     private String name;
     private Double balance;
-    @OneToMany
+    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL)
     private List<Order> orderList;
 
     public Client () {

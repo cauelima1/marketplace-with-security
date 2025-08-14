@@ -3,15 +3,12 @@ package com.mktpc.marketPlace.controller;
 
 import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.repository.ClientRepository;
-import com.mktpc.marketPlace.service.ClientService;
+import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
@@ -19,7 +16,7 @@ import java.util.List;
 public class ClientController {
 
     @Autowired
-    private ClientService clientService;
+    private ClientOrderService clientService;
 
     @Autowired
     private ClientRepository clientRepository;
@@ -30,8 +27,8 @@ public class ClientController {
     }
 
     @PostMapping("/deposit/{value}")
-    public ResponseEntity<List<Client>> clientDeposit (@PathVariable Double value, Principal principal){
-        clientService.createAndDeposite(value);
+    public ResponseEntity<List<Client>> clientDeposit (@PathVariable Double value){
+        clientService.depositToClient(value);
         return ResponseEntity.ok().body(clientService.getClients());
     }
 

@@ -1,30 +1,51 @@
 package com.mktpc.marketPlace.controller;
 
+import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.model.Order;
-import com.mktpc.marketPlace.model.dtos.OrderDTO;
-import com.mktpc.marketPlace.model.dtos.OrderDtoResponse;
+import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
+import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.service.OrderService;
+import com.mktpc.marketPlace.service.clientServices.ClientBillService;
+import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/order")
 public class OrderController {
 
     @Autowired
+    private ClientBillService clientBillService;
+
+    @Autowired
+    private ClientOrderService clientOrderService;
+
+    @Autowired
     private OrderService orderService;
 
     @PostMapping("/{idProduct}")
-    public ResponseEntity order (@PathVariable Long idProduct, @RequestBody OrderDTO orderDTO){
-        Order order = orderService.issueOrder(idProduct, orderDTO);
+    public ResponseEntity<Order> order (@PathVariable Long idProduct, @RequestBody OrderDtoRequest orderDtoRequest){
+        Order order = orderService.issueOrder(idProduct, orderDtoRequest);
         return ResponseEntity.ok().body(order);
     }
 
+    @GetMapping("/finishOrder")
+    public ResponseEntity<Order> finishOrder () {
+        clientBillService.finishOrder(orderService.getUserOrder());
+        return ResponseEntity.ok(orderService.getUserOrder());
+    }
+
     @GetMapping
-    public ResponseEntity<List<Order>> getAllOrders (){
-        return ResponseEntity.ok().body(orderService.getOrders());
+    public ResponseEntity<List<OrderDtoResponse>> getAllOrders (){
+        List<Order> orders = orderService.getOrders();
+
+        List<OrderDtoResponse> dtos = orders.stream()
+                .map(OrderDtoResponse::new)
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(dtos);
     }
  }
