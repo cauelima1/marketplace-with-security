@@ -10,8 +10,7 @@ public class Client {
 
     @Id
     private String name;
-    private String email;
-    private double balance;
+    private Double balance;
     @OneToMany
     private List<Order> orderList;
 
@@ -20,9 +19,8 @@ public class Client {
     }
 
 
-    public Client(String name, String email, double balance, List<Order> orderList) {
+    public Client(String name, Double balance, List<Order> orderList) {
         this.name = name;
-        this.email = email;
         this.balance = balance;
         this.orderList = orderList;
     }
@@ -36,19 +34,11 @@ public class Client {
         this.name = name;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public double getBalance() {
+    public Double getBalance() {
         return balance;
     }
 
-    public void setBalance(double balance) {
+    public void setBalance(Double balance) {
         this.balance = balance;
     }
 

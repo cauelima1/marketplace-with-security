@@ -3,6 +3,7 @@ package com.mktpc.marketPlace.model;
 
 import jakarta.persistence.*;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -13,19 +14,23 @@ public class Order {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID uuid;
-    @ManyToOne
+    @OneToOne
     private Client client;
     @OneToMany
-    private List<Product> productList;
+    private List<OrderItem> orderItems = new ArrayList<>();
     private double totalPrice;
-    private boolean status;
+    private boolean orderStatus;
 
-    public Order(UUID uuid, Client client, List<Product> productList, double totalPrice, boolean status) {
+    public Order(UUID uuid, Client client, List<OrderItem> productList, double totalPrice, boolean status) {
         this.uuid = uuid;
         this.client = client;
-        this.productList = productList;
+        this.orderItems = orderItems;
         this.totalPrice = totalPrice;
-        this.status = status;
+        this.orderStatus = status;
+    }
+
+    public Order() {
+
     }
 
     public UUID getUuid() {
@@ -44,12 +49,12 @@ public class Order {
         this.client = client;
     }
 
-    public List<Product> getProductList() {
-        return productList;
+    public List<OrderItem> getOrderItems() {
+        return orderItems;
     }
 
-    public void setProductList(List<Product> productList) {
-        this.productList = productList;
+    public void setorderItems(List<OrderItem> orderItems) {
+        this.orderItems = orderItems;
     }
 
     public double getTotalPrice() {
@@ -60,11 +65,11 @@ public class Order {
         this.totalPrice = totalPrice;
     }
 
-    public boolean isStatus() {
-        return status;
+    public boolean isOrderStatus() {
+        return orderStatus;
     }
 
-    public void setStatus(boolean status) {
-        this.status = status;
+    public void setOrderStatus(boolean orderStatus) {
+        this.orderStatus = orderStatus;
     }
 }

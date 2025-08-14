@@ -26,10 +26,12 @@ public class SecurityConfig {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(h-> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
-//                .sessionManagement( s-> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .sessionManagement( s-> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/market/**").hasRole("USER")
+                        .requestMatchers("/client/**").hasRole("USER")
+                        .requestMatchers("/client/deposit").permitAll()
                         .anyRequest().authenticated()
 
                 )

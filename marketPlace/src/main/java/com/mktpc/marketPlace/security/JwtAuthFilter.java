@@ -37,53 +37,46 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
-
         if (secret == null || secret.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("JWT secret não configurado.");
             return;
         }
-
         String authHeader = request.getHeader("Authorization");
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
         String token = authHeader.substring(7);
-
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
                     .build()
                     .parseClaimsJws(token)
                     .getBody();
-
             String username = claims.getSubject();
             String role = claims.get("role", String.class);
-
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
-
             Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            Client newClient = new Client();
-            newClient.setName(username);
-            clientRepository.save(newClient);
+//          Client newClient = new Client();
+//
+//          newClient.setName(username);
+//          clientRepository.save(newClient);
+
 
 //            System.out.println("Usuário autenticado: " + newClient.getName());
 //            System.out.println("Role extraída: " + role);
 //            System.out.println("Authorities: " + authorities);
 //            System.out.println("SecurityContext: " + SecurityContextHolder.getContext().getAuthentication());
 
+
         } catch (JwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
         chain.doFilter(request, response);
-
     }
-
-
 
 }

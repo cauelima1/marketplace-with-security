@@ -15,13 +15,13 @@ public class Product {
 
     @Enumerated(EnumType.STRING)
     private CategoryProduct categoryProduct;
-    private int quant;
+    private Long quant;
     private double priceProduct;
 
     public Product (){
     }
 
-    public Product(Long id, String name, String productDetails, CategoryProduct categoryProduct, int quant, double priceProduct) {
+    public Product(Long id, String name, String productDetails, CategoryProduct categoryProduct, Long quant, double priceProduct) {
         this.id = id;
         this.name = name;
         this.productDetails = productDetails;
@@ -62,11 +62,11 @@ public class Product {
         this.categoryProduct = categoryProduct;
     }
 
-    public int getQuant() {
+    public Long getQuant() {
         return quant;
     }
 
-    public void setQuant(int quant) {
+    public void setQuant(Long quant) {
         this.quant = quant;
     }
 
