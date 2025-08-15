@@ -6,6 +6,7 @@ import com.mktpc.marketPlace.model.OrderItem;
 import com.mktpc.marketPlace.model.Product;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.QuantDeleteDTO;
+import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.repository.OrderItemRepository;
 import com.mktpc.marketPlace.repository.OrderRepository;
@@ -17,6 +18,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -113,11 +115,22 @@ public class OrderService {
         }
     }
 
+    public Order getUserOrder (){
+        return orderRepository.findByClientName(clientService.getLogin());
+    }
+
     public List<Order> getOrders(){
         return orderRepository.findAll();
     }
 
-    public Order getUserOrder (){
-        return orderRepository.findByClientName(clientService.getLogin());
+    public List<OrderDtoResponse> getOrderDTO (){
+        List<Order> orders = getOrders();
+
+        List<OrderDtoResponse> dtos = orders.stream()
+                .map(OrderDtoResponse::new)
+                .collect(Collectors.toList());
+        return dtos;
     }
+
+
 }

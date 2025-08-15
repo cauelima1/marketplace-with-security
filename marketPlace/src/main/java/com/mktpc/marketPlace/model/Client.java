@@ -15,16 +15,17 @@ public class Client {
     private List<Order> orderList;
 
     public Client () {
-
     }
 
+    public Client (String name){
+        this.name = name;
+    }
 
     public Client(String name, Double balance, List<Order> orderList) {
         this.name = name;
         this.balance = balance;
         this.orderList = orderList;
     }
-
 
     public String getName() {
         return name;

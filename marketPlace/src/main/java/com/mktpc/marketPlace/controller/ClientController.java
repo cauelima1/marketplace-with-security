@@ -19,6 +19,9 @@ public class ClientController {
     private ClientOrderService clientService;
 
     @Autowired
+    private ClientOrderService clientOrderService;
+
+    @Autowired
     private ClientRepository clientRepository;
 
     @GetMapping
@@ -28,6 +31,7 @@ public class ClientController {
 
     @PostMapping("/deposit/{value}")
     public ResponseEntity<List<Client>> clientDeposit (@PathVariable Double value){
+        clientOrderService.firstLogin();
         clientService.depositToClient(value);
         return ResponseEntity.ok().body(clientService.getClients());
     }

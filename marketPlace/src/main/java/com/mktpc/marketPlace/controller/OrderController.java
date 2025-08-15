@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @RestController
@@ -39,13 +40,14 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getUserOrder());
     }
 
+    @DeleteMapping("/deleteOrder/{orderId}")
+    public ResponseEntity<List<OrderDtoResponse>> deleteOrderByUUID (@PathVariable UUID orderId){
+        clientOrderService.deleteUserOrder(orderId);
+        return ResponseEntity.ok(orderService.getOrderDTO());
+    }
+
     @GetMapping
     public ResponseEntity<List<OrderDtoResponse>> getAllOrders (){
-        List<Order> orders = orderService.getOrders();
-
-        List<OrderDtoResponse> dtos = orders.stream()
-                .map(OrderDtoResponse::new)
-                .collect(Collectors.toList());
-        return ResponseEntity.ok(dtos);
+        return ResponseEntity.ok(orderService.getOrderDTO());
     }
  }

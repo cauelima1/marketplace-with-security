@@ -67,7 +67,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-        clientOrderService.firstLogin();
+
         chain.doFilter(request, response);
     }
 

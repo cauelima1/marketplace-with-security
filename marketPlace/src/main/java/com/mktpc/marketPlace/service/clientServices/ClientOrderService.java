@@ -2,17 +2,27 @@ package com.mktpc.marketPlace.service.clientServices;
 
 import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.repository.ClientRepository;
+import com.mktpc.marketPlace.repository.OrderRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 public class ClientOrderService {
 
     @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private OrderRepository orderRepository;
+
+    public void firstLogin() {
+        Client client = new Client(getLogin(), 0.0, null);
+        clientRepository.save(client);
+    }
 
     public void depositToClient(Double value){
         if(value >= 0) {
@@ -24,10 +34,12 @@ public class ClientOrderService {
         }
     }
 
-
-    public void firstLogin() {
-        Client client = new Client(getLogin(), 0.0, null);
-        clientRepository.save(client);
+    public void deleteUserOrder (UUID orderId) {
+        if (orderRepository.findByUuid(orderId) != null) {
+            orderRepository.delete(orderRepository.findByUuid(orderId));
+        } else {
+            throw new RuntimeException("Inform a valid Order ID");
+        }
     }
 
     public List<Client> getClients (){
