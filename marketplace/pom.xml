@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.mktpc</groupId>
-	<artifactId>marketPlace</artifactId>
+	<artifactId>marketplace</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>marketPlace</name>
 	<description>MarketPlace Application</description>

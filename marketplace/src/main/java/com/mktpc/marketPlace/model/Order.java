@@ -29,7 +29,7 @@ public class Order {
     public Order(UUID uuid, Client client, List<OrderItem> productList, double totalPrice, boolean status) {
         this.uuid = uuid;
         this.client = client;
-        this.orderItems = orderItems;
+        this.orderItems = new ArrayList<>();
         this.totalPrice = totalPrice;
         this.orderFinish = status;
     }

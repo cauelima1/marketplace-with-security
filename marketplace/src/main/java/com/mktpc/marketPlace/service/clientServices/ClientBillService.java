@@ -26,7 +26,7 @@ public class ClientBillService {
             order.setOrderFinish(true);
             clientRepository.save(client);
         } else {
-            throw new RuntimeException("insufficient money.");
+            throw new RuntimeException("insufficient money. R$" + client.getBalance() + " available.");
         }
     }
 

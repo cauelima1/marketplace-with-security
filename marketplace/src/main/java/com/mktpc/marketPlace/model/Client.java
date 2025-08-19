@@ -27,6 +27,8 @@ public class Client {
         this.orderList = orderList;
     }
 
+
+
     public String getName() {
         return name;
     }

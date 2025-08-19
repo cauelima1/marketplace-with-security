@@ -13,6 +13,7 @@ import com.mktpc.marketPlace.repository.OrderRepository;
 import com.mktpc.marketPlace.repository.ProductRepository;
 import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,9 +21,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-
 @Service
 public class OrderService {
+
+
+    @Autowired
+    @Lazy
+    private ClientOrderService clientOrderService;
 
     @Autowired
     private OrderItemRepository itemRepository;
@@ -40,18 +45,20 @@ public class OrderService {
     private ProductRepository productRepository;
 
     @Autowired
+    @Lazy
     private ClientOrderService clientService;
 
-    public Order issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
+    public void issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
+        clientOrderService.firstLogin();
         Optional<Product> stockProduct = productRepository.findById(idProduct);
 
         if(stockProduct.isPresent()) {
-            uptateExistingProductStock(stockProduct.get(), orderDtoRequest.quant());
+            updateExistingProductStock(stockProduct.get(), orderDtoRequest.quant());
 
             if (orderRepository.existsByClientName(clientService.getLogin())){
-                return addProductsToExistingOrder(idProduct, orderDtoRequest.quant());
+                addProductsToExistingOrder(idProduct, orderDtoRequest.quant());
             } else {
-                return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
+                addProductsToNewOrder(idProduct, orderDtoRequest.quant());
             }
         } else {
             throw new RuntimeException ("Product Id does not exist.");
@@ -59,7 +66,7 @@ public class OrderService {
 
     }
 
-    public Order addProductsToNewOrder (Long idProduct, Long quant){
+    public void addProductsToNewOrder (Long idProduct, Long quant){
         Order newOrder = new Order();
         newOrder.setClient(clientRepository.findByName(clientService.getLogin()));
 
@@ -71,21 +78,20 @@ public class OrderService {
         itemRepository.save(item);
         orderRepository.save(newOrder);
         saveOrderInClient(newOrder);
-        return newOrder;
     }
 
-    public Order addProductsToExistingOrder (Long idProduct, Long quant){
-        Order existingOrder = orderRepository.findByClientName(clientService.getLogin());
-
-        OrderItem item = addItemToOrder(idProduct, quant);
-
-        existingOrder.getOrderItems().add(item);
-        existingOrder.setTotalPrice(item.getSubtotal() + existingOrder.getTotalPrice());
-
-        itemRepository.save(item);
-        orderRepository.save(existingOrder);
-        saveOrderInClient(existingOrder);
-        return existingOrder;
+    public void addProductsToExistingOrder (Long idProduct, Long quant){
+        if (productRepository.existsById(idProduct)) {
+            Order existingOrder = orderRepository.findByClientName(clientService.getLogin());
+            OrderItem item = addItemToOrder(idProduct, quant);
+            existingOrder.getOrderItems().add(item);
+            existingOrder.setTotalPrice(item.getSubtotal() + existingOrder.getTotalPrice());
+            itemRepository.save(item);
+            orderRepository.save(existingOrder);
+            saveOrderInClient(existingOrder);
+        } else {
+            throw new RuntimeException("Inexisting Id Product.");
+        }
     }
 
     public void saveOrderInClient(Order order){
@@ -97,16 +103,19 @@ public class OrderService {
     }
 
     public OrderItem addItemToOrder (Long idProduct, Long quant){
+        if (productRepository.existsById(idProduct)){
         Product product = productRepository.findById(idProduct).get();
-
         OrderItem item = new OrderItem();
         item.setProduct(product);
         item.setQuant(quant);
         item.setUnitprice(product.getPriceProduct());
         return item;
+        } else {
+            throw new RuntimeException("Inexisting Id Product.");
+        }
     }
 
-    public void uptateExistingProductStock(Product stockProduct, Long quant){
+    public void updateExistingProductStock(Product stockProduct, Long quant){
         if (stockProduct.getStock() >= quant) {
             QuantDeleteDTO quantDeleteDTO = new QuantDeleteDTO(quant);
             productService.removeQuant(stockProduct.getId(), quantDeleteDTO);
@@ -125,11 +134,9 @@ public class OrderService {
 
     public List<OrderDtoResponse> getOrderDTO (){
         List<Order> orders = getOrders();
-
-        List<OrderDtoResponse> dtos = orders.stream()
+        return orders.stream()
                 .map(OrderDtoResponse::new)
                 .collect(Collectors.toList());
-        return dtos;
     }
 
 

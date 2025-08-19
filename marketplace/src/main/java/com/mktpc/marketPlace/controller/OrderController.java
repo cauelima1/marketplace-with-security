@@ -29,9 +29,10 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/{idProduct}")
-    public ResponseEntity<Order> order (@PathVariable Long idProduct, @RequestBody OrderDtoRequest orderDtoRequest){
-        Order order = orderService.issueOrder(idProduct, orderDtoRequest);
-        return ResponseEntity.ok().body(order);
+    public ResponseEntity<?> order (@PathVariable Long idProduct, @RequestBody OrderDtoRequest orderDtoRequest){
+        orderService.issueOrder(idProduct, orderDtoRequest);
+        List<OrderDtoResponse> orderDtoResponse = orderService.getOrders().stream().map(OrderDtoResponse::new).toList();
+                return ResponseEntity.ok().body(orderDtoResponse.stream().filter(c-> c.getClientName().equals(clientOrderService.getLogin())));
     }
 
     @GetMapping("/finishOrder")

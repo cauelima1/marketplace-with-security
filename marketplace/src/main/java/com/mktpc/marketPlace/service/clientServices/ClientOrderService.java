@@ -1,17 +1,24 @@
 package com.mktpc.marketPlace.service.clientServices;
 
 import com.mktpc.marketPlace.model.Client;
+import com.mktpc.marketPlace.model.dtos.dtosResponse.ClientDtoResponse;
+import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.repository.OrderRepository;
+import com.mktpc.marketPlace.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ClientOrderService {
+
+    @Autowired
+    private OrderService orderService;
 
     @Autowired
     private ClientRepository clientRepository;
