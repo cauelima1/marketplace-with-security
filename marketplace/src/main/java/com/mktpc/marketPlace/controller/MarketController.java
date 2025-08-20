@@ -17,8 +17,6 @@ public class MarketController {
     @Autowired
     private ProductService productService;
 
-
-
     @PostMapping("/addProduct")
     public String createProduct (@RequestBody ProductDTO productDTO){
         productService.addProduct(productDTO);

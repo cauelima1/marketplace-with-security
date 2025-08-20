@@ -49,7 +49,6 @@ public class OrderService {
     private ClientOrderService clientService;
 
     public void issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
-        clientOrderService.firstLogin();
         Optional<Product> stockProduct = productRepository.findById(idProduct);
 
         if(stockProduct.isPresent()) {

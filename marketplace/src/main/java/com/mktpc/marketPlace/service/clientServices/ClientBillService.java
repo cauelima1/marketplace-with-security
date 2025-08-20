@@ -11,9 +11,6 @@ import org.springframework.stereotype.Service;
 public class ClientBillService {
 
     @Autowired
-    private OrderRepository orderRepository;
-
-    @Autowired
     private ClientRepository clientRepository;
 
     @Autowired

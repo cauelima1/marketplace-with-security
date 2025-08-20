@@ -2,6 +2,7 @@ package com.mktpc.marketPlace.controller;
 
 
 import com.mktpc.marketPlace.model.Client;
+import com.mktpc.marketPlace.model.dtos.dtosResponse.ClientDtoResponse;
 import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,19 +11,17 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/client")
 public class ClientController {
 
     @Autowired
-    private ClientOrderService clientService;
-
-    @Autowired
-    private ClientOrderService clientOrderService;
-
-    @Autowired
     private ClientRepository clientRepository;
+
+    @Autowired
+    private ClientOrderService clientService;
 
     @GetMapping
     public ResponseEntity<?> testePage (HttpServletRequest request){
@@ -30,15 +29,18 @@ public class ClientController {
     }
 
     @PostMapping("/deposit/{value}")
-    public ResponseEntity<List<Client>> clientDeposit (@PathVariable Double value){
-        clientOrderService.firstLogin();
-        clientService.depositToClient(value);
-        return ResponseEntity.ok().body(clientService.getClients());
+    public ResponseEntity<Client> clientDeposit (@PathVariable Double value){
+        if(!clientRepository.existsByName(clientService.getLogin())){
+            clientService.firstLogin(value);
+        } else {
+            clientService.depositToClient(value);
+        }
+        return ResponseEntity.ok().body(clientRepository.findByName(clientService.getLogin()));
     }
 
     @GetMapping("/all")
-    public ResponseEntity<List<Client>> clients(){
-        return ResponseEntity.ok().body(clientService.getClients());
+    public ResponseEntity<Map<String, ClientDtoResponse>> clients(){
+        return ResponseEntity.ok().body(clientService.getClientsDto());
     }
 
 }

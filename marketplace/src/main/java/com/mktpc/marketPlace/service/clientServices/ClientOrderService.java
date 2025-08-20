@@ -7,12 +7,15 @@ import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.repository.OrderRepository;
 import com.mktpc.marketPlace.service.OrderService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.jaxb.SpringDataJaxb;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
-import java.util.UUID;
+
+import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+
 
 @Service
 public class ClientOrderService {
@@ -26,8 +29,11 @@ public class ClientOrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public void firstLogin() {
-        Client client = new Client(getLogin(), 0.0, null);
+    public void firstLogin(Double balance) {
+        Client client = new Client();
+        client.setName(getLogin());
+        client.setBalance(balance);
+        client.setOrderList(new ArrayList<>());
         clientRepository.save(client);
     }
 
@@ -52,6 +58,21 @@ public class ClientOrderService {
     public List<Client> getClients (){
         return clientRepository.findAll();
     }
+
+    public Map<String ,  ClientDtoResponse> getClientsDto () {
+        List<OrderDtoResponse> ordersDto = orderService.getOrderDTO();
+
+        return ordersDto.stream()
+                .collect(Collectors.toMap(
+                        OrderDtoResponse::getClientName,
+                        order -> {
+                            // Busca o saldo do cliente (exemplo: via clientService ou repository)
+                            Double balance = clientRepository.findByName(getLogin()).getBalance();
+                            return new ClientDtoResponse(order.getClientName(), order, balance);
+                        }
+                ));
+    }
+
 
     public String getLogin () {
         return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
