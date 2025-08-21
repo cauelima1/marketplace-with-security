@@ -25,6 +25,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 import java.util.List;
 
+import static org.aspectj.weaver.tools.cache.SimpleCacheFactory.path;
+
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 
@@ -41,6 +43,9 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
+
+
+
         if (secret == null || secret.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             response.getWriter().write("JWT secret não configurado.");
@@ -52,6 +57,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return;
         }
         String token = authHeader.substring(7);
+
         try {
             Claims claims = Jwts.parserBuilder()
                     .setSigningKey(Keys.hmacShaKeyFor(secret.getBytes()))
@@ -60,13 +66,29 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                     .getBody();
             String username = claims.getSubject();
             String role = claims.get("role", String.class);
+
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
             Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
+
+            String path = request.getRequestURI();
+
+            if (path.startsWith("/swagger-ui") ||
+                    path.startsWith("/v3/api-docs") ||
+                    path.startsWith("/swagger-resources") ||
+                    path.startsWith("/webjars") ||
+                    path.startsWith("/swagger-ui.html")) {
+
+                chain.doFilter(request, response);
+                return;
+            }
+
+
         } catch (JwtException e) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+
 
         chain.doFilter(request, response);
     }

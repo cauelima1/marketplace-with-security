@@ -27,12 +27,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .headers(h-> h.frameOptions(HeadersConfigurer.FrameOptionsConfig::disable))
                 .sessionManagement( s-> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/v3/api-docs/**",
+                .authorizeHttpRequests(auth -> auth.requestMatchers(
+                                        "/v3/api-docs/**",
+                                        "/swagger-ui.html",
                                         "/swagger-ui/**",
-                                        "/swagger-ui.html"
+                                        "/swagger-resources/**",
+                                        "/webjars/**"
                                 ).permitAll()
-                        .requestMatchers("/h2-console/**").permitAll()
+                                .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/market/**").hasRole("USER")
                         .requestMatchers("/client/**").hasRole("USER")
                         .requestMatchers("/client/deposit").permitAll()
