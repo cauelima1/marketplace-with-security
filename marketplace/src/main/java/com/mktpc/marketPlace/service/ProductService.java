@@ -16,7 +16,7 @@ public class ProductService {
     @Autowired
     private ProductRepository productRepository;
 
-    public void addProduct (ProductDTO productDTO){
+    public Product addProduct (ProductDTO productDTO){
         Product product = new Product();
         product.setId(product.getId());
         product.setName(productDTO.name());
@@ -24,28 +24,30 @@ public class ProductService {
         product.setCategoryProduct(productDTO.categoryProduct());
         product.setPriceProduct(productDTO.priceProduct());
         product.setStock(productDTO.quant());
-        productRepository.save(product);
+        return productRepository.save(product);
     }
 
     public List<Product> showAllProducts(){
         return productRepository.findAll();
     }
 
-    public void removeProduct (Long idProduct) {
+    public List<Product> removeProduct (Long idProduct) {
         if (productRepository.existsById(idProduct)) {
             productRepository.deleteById(idProduct);
+            return productRepository.findAll();
         } else {
             throw new RuntimeException("Id do not exists.");
         }
     }
 
-    public void removeQuant (Long idProduct, QuantDeleteDTO quantDeleteDTO){
+    public Product removeQuant (Long idProduct, QuantDeleteDTO quantDeleteDTO){
         if (productRepository.existsById(idProduct)){
             Product product = productRepository.findById(idProduct).get();
             if(product.getStock()>=quantDeleteDTO.quant() && quantDeleteDTO.quant() > 0){
                 Long balance = product.getStock() - quantDeleteDTO.quant();
                 product.setStock(balance);
                 productRepository.save(product);
+                return product;
             } else {
                 throw new RuntimeException("insufficient quantity");
             }

@@ -30,12 +30,8 @@ public class ClientController {
 
     @PostMapping("/deposit/{value}")
     public ResponseEntity<Client> clientDeposit (@PathVariable Double value){
-        if(!clientRepository.existsByName(clientService.getLogin())){
-            clientService.firstLogin(value);
-        } else {
-            clientService.depositToClient(value);
-        }
-        return ResponseEntity.ok().body(clientRepository.findByName(clientService.getLogin()));
+            Client client = clientService.depositToClient(value);
+         return ResponseEntity.ok().body(client);
     }
 
     @GetMapping("/all")

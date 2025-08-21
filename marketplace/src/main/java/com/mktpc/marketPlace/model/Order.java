@@ -35,7 +35,7 @@ public class Order {
     }
 
     public Order() {
-
+    this.orderFinish=false;
     }
 
     public UUID getUuid() {

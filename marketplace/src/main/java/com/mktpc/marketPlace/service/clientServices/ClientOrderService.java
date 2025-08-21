@@ -37,11 +37,13 @@ public class ClientOrderService {
         clientRepository.save(client);
     }
 
-    public void depositToClient(Double value){
+    public Client depositToClient(Double value){
         if(value >= 0) {
-            Client client = clientRepository.findByName(getLogin());
+            String name = getLogin();
+            Client client = clientRepository.findByName(name);
             client.setBalance(client.getBalance() + value);
             clientRepository.save(client);
+            return client;
         } else {
             throw new RuntimeException("Invalid deposit value.");
         }
@@ -66,7 +68,6 @@ public class ClientOrderService {
                 .collect(Collectors.toMap(
                         OrderDtoResponse::getClientName,
                         order -> {
-                            // Busca o saldo do cliente (exemplo: via clientService ou repository)
                             Double balance = clientRepository.findByName(getLogin()).getBalance();
                             return new ClientDtoResponse(order.getClientName(), order, balance);
                         }
@@ -75,6 +76,6 @@ public class ClientOrderService {
 
 
     public String getLogin () {
-        return SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString();
+        return SecurityContextHolder.getContext().getAuthentication().getName();
     }
 }

@@ -1,6 +1,5 @@
 package com.mktpc.marketPlace.controller;
 
-import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.model.Order;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
 import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
@@ -13,7 +12,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/order")

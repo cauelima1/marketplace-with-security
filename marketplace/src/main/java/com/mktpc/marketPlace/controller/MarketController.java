@@ -18,9 +18,9 @@ public class MarketController {
     private ProductService productService;
 
     @PostMapping("/addProduct")
-    public String createProduct (@RequestBody ProductDTO productDTO){
-        productService.addProduct(productDTO);
-        return ResponseEntity.ok(productDTO).toString();
+    public ResponseEntity<Product> createProduct (@RequestBody ProductDTO productDTO){
+        Product newProduct = productService.addProduct(productDTO);
+        return ResponseEntity.ok(newProduct);
     }
 
     @GetMapping("/products")
@@ -30,16 +30,16 @@ public class MarketController {
     }
 
     @DeleteMapping("/deleteProduct/{idProduct}")
-    public ResponseEntity<Product> deleteProduct (@PathVariable Long idProduct){
-        productService.removeProduct(idProduct);
-        return ResponseEntity.ok().build();
+    public ResponseEntity<List<Product>> deleteProduct (@PathVariable Long idProduct){
+        return ResponseEntity.ok().body(productService.removeProduct(idProduct));
+
     }
 
     @DeleteMapping("/removeQuantity/{idProduct}")
     public ResponseEntity<Product> deleteQuantProd (@PathVariable Long idProduct, @RequestBody QuantDeleteDTO quant){
         try{
-            productService.removeQuant(idProduct, quant);
-            return ResponseEntity.ok().build();
+            Product productRemoved = productService.removeQuant(idProduct, quant);
+            return ResponseEntity.ok(productRemoved);
         }   catch (RuntimeException e){
             return ResponseEntity.badRequest().build();
         }

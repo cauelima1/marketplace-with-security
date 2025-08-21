@@ -49,6 +49,9 @@ public class OrderService {
     private ClientOrderService clientService;
 
     public void issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
+        if(!clientRepository.existsByName(clientService.getLogin())) {
+            clientService.firstLogin(0d);
+        }
         Optional<Product> stockProduct = productRepository.findById(idProduct);
 
         if(stockProduct.isPresent()) {
@@ -117,7 +120,6 @@ public class OrderService {
     public void updateExistingProductStock(Product stockProduct, Long quant){
         if (stockProduct.getStock() >= quant) {
             QuantDeleteDTO quantDeleteDTO = new QuantDeleteDTO(quant);
-            productService.removeQuant(stockProduct.getId(), quantDeleteDTO);
         } else {
             throw new RuntimeException("Insifficiant products stock");
         }
@@ -128,7 +130,7 @@ public class OrderService {
     }
 
     public List<Order> getOrders(){
-        return orderRepository.findAll();
+        return orderRepository.findAll().stream().filter(o-> !getUserOrder().isOrderFinish()).toList();
     }
 
     public List<OrderDtoResponse> getOrderDTO (){
@@ -137,6 +139,4 @@ public class OrderService {
                 .map(OrderDtoResponse::new)
                 .collect(Collectors.toList());
     }
-
-
 }
