@@ -2,7 +2,6 @@ package com.mktpc.marketPlace.controller;
 
 
 import com.mktpc.marketPlace.model.Client;
-import com.mktpc.marketPlace.model.dtos.dtosResponse.ClientDtoResponse;
 import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -11,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/client")
@@ -30,13 +28,15 @@ public class ClientController {
 
     @PostMapping("/deposit/{value}")
     public ResponseEntity<Client> clientDeposit (@PathVariable Double value){
+        if (clientRepository.existsByName(clientService.getLogin())){
             Client client = clientService.depositToClient(value);
-         return ResponseEntity.ok().body(client);
+            return ResponseEntity.ok().body(client);
+        } else {
+            Client client = clientService.firstLogin(value);
+            return ResponseEntity.ok().body(client);
+        }
     }
 
-    @GetMapping("/all")
-    public ResponseEntity<Map<String, ClientDtoResponse>> clients(){
-        return ResponseEntity.ok().body(clientService.getClientsDto());
-    }
+
 
 }

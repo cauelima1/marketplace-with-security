@@ -5,7 +5,6 @@ import com.mktpc.marketPlace.model.Order;
 import com.mktpc.marketPlace.model.OrderItem;
 import com.mktpc.marketPlace.model.Product;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
-import com.mktpc.marketPlace.model.dtos.dtosRequest.QuantDeleteDTO;
 import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.repository.OrderItemRepository;
@@ -48,59 +47,58 @@ public class OrderService {
     @Lazy
     private ClientOrderService clientService;
 
-    public void issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
+    public Order issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
         if(!clientRepository.existsByName(clientService.getLogin())) {
-            clientService.firstLogin(0d);
+            clientService.firstLogin(0D);
         }
-        Optional<Product> stockProduct = productRepository.findById(idProduct);
-
-        if(stockProduct.isPresent()) {
-            updateExistingProductStock(stockProduct.get(), orderDtoRequest.quant());
-
-            if (orderRepository.existsByClientName(clientService.getLogin())){
-                addProductsToExistingOrder(idProduct, orderDtoRequest.quant());
+        List<Order> orders = orderRepository.findAll().stream().filter(o-> o.getClient().equals(clientService.getLogin())).toList();
+        if (orders.isEmpty()){
+            Optional<Product> stockProduct = productRepository.findById(idProduct);
+            if (stockProduct.isPresent()) {
+                return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
             } else {
-                addProductsToNewOrder(idProduct, orderDtoRequest.quant());
+                throw new RuntimeException("Product Id does not exist.");
             }
         } else {
-            throw new RuntimeException ("Product Id does not exist.");
+            return addProductsToExistingOrder(idProduct, orderDtoRequest.quant());
         }
-
     }
 
-    public void addProductsToNewOrder (Long idProduct, Long quant){
+    public Order addProductsToNewOrder (Long idProduct, Long quant){
         Order newOrder = new Order();
         newOrder.setClient(clientRepository.findByName(clientService.getLogin()));
-
         OrderItem item = addItemToOrder(idProduct, quant);
-
         newOrder.getOrderItems().add(item);
         newOrder.setTotalPrice(item.getSubtotal());
-
         itemRepository.save(item);
         orderRepository.save(newOrder);
         saveOrderInClient(newOrder);
+        return newOrder;
     }
 
-    public void addProductsToExistingOrder (Long idProduct, Long quant){
+    public Order addProductsToExistingOrder (Long idProduct, Long quant){
         if (productRepository.existsById(idProduct)) {
             Order existingOrder = orderRepository.findByClientName(clientService.getLogin());
-            OrderItem item = addItemToOrder(idProduct, quant);
-            existingOrder.getOrderItems().add(item);
-            existingOrder.setTotalPrice(item.getSubtotal() + existingOrder.getTotalPrice());
-            itemRepository.save(item);
-            orderRepository.save(existingOrder);
-            saveOrderInClient(existingOrder);
+            if (!existingOrder.isOrderFinish()) {
+                OrderItem item = addItemToOrder(idProduct, quant);
+                existingOrder.getOrderItems().add(item);
+                existingOrder.setTotalPrice(item.getSubtotal() + existingOrder.getTotalPrice());
+                itemRepository.save(item);
+                orderRepository.save(existingOrder);
+                saveOrderInClient(existingOrder);
+                return existingOrder;
+            } else {
+                orderRepository.delete(existingOrder);
+                throw new RuntimeException("No orders available.");
+            }
         } else {
             throw new RuntimeException("Inexisting Id Product.");
         }
     }
 
-    public void saveOrderInClient(Order order){
+    public void saveOrderInClient(Order newOrder){
         Client client = clientRepository.findByName(clientService.getLogin());
-        List<Order> orderClient = new ArrayList<>();
-        orderClient.add(orderRepository.findByClientName(client.getName()));
-        client.setOrderList(orderClient);
+        client.getOrders().add(newOrder);
         clientRepository.save(client);
     }
 
@@ -117,24 +115,17 @@ public class OrderService {
         }
     }
 
-    public void updateExistingProductStock(Product stockProduct, Long quant){
-        if (stockProduct.getStock() >= quant) {
-            QuantDeleteDTO quantDeleteDTO = new QuantDeleteDTO(quant);
-        } else {
-            throw new RuntimeException("Insifficiant products stock");
-        }
-    }
 
     public Order getUserOrder (){
-        return orderRepository.findByClientName(clientService.getLogin());
+      return orderRepository.findByClientName(clientService.getLogin());
     }
 
-    public List<Order> getOrders(){
+    public List<Order> getOpenOrders(){
         return orderRepository.findAll().stream().filter(o-> !getUserOrder().isOrderFinish()).toList();
     }
 
     public List<OrderDtoResponse> getOrderDTO (){
-        List<Order> orders = getOrders();
+        List<Order> orders = getOpenOrders();
         return orders.stream()
                 .map(OrderDtoResponse::new)
                 .collect(Collectors.toList());

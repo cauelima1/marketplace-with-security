@@ -9,6 +9,6 @@ public interface ClientRepository extends JpaRepository<Client, Long> {
 
     boolean existsByName (String name);
 
-    Client findByName(String username);
+    Client findByName(String name);
 
 }

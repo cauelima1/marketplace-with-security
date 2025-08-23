@@ -1,11 +1,7 @@
 package com.mktpc.marketPlace.service.clientServices;
 
-import com.mktpc.marketPlace.model.Client;
-import com.mktpc.marketPlace.model.Order;
-import com.mktpc.marketPlace.model.OrderItem;
-import com.mktpc.marketPlace.model.Product;
+import com.mktpc.marketPlace.model.*;
 import com.mktpc.marketPlace.repository.ClientRepository;
-import com.mktpc.marketPlace.repository.OrderItemRepository;
 import com.mktpc.marketPlace.repository.OrderRepository;
 import com.mktpc.marketPlace.repository.ProductRepository;
 import com.mktpc.marketPlace.service.DeliveryService;
@@ -13,9 +9,9 @@ import com.mktpc.marketPlace.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -29,7 +25,7 @@ public class ClientBillService {
     private ProductRepository productRepository;
 
     @Autowired
-    private OrderItemRepository orderItemRepository;
+    private OrderRepository orderRepository;
 
     @Autowired
     private DeliveryService deliveryService;
@@ -40,38 +36,42 @@ public class ClientBillService {
     @Autowired
     private ClientOrderService clientOrderService;
 
-    public void finishOrder (Order order) {
-        Client client = clientRepository.findByName(order.getClient().getName());
-            if (order.getTotalPrice() <= client.getBalance()){
-                client.setBalance(client.getBalance() - order.getTotalPrice());
-                order.setOrderFinish(true);
-
-                List<OrderItem> purchasedItens = order.getOrderItems();
-                List<Product> productsStock = productRepository.findAll();
-
-                updateStockProducts(purchasedItens, productsStock);
-
-                deliveryService.turnOrderIntoDelivery(order);
-                clientRepository.save(client);
+    public Delivery finishOrder (Long orderId) {
+        Order order = orderRepository.getOrderById(orderId);
+        if(order != null && !order.isOrderFinish()) {
+            Client client = clientRepository.findByName(clientOrderService.getLogin());
+            List<OrderItem> itemsInOrder = order.getOrderItems();
+            updateStockProducts(itemsInOrder);
+                if (client.getBalance() >= order.getTotalPrice()) {
+                    client.setBalance(client.getBalance() - order.getTotalPrice());
+                    clientRepository.save(client);
+                } else {
+                    throw new RuntimeException("insufficient money. R$" + client.getBalance() + " available.");
+                }
+            return deliveryService.turnOrderIntoDelivery(order);
             } else {
-                throw new RuntimeException("insufficient money. R$" + client.getBalance() + " available.");
+            throw new RuntimeException("Verify the Order id");
             }
     }
 
-    public void updateStockProducts (List<OrderItem> purchasedItens, List<Product> productsStock) {
+    public void updateStockProducts (List<OrderItem> purchasedItens) {
+    List<Product> productsStock = productRepository.findAll();
     Map<Long, Product> stockMap = productsStock.stream()
             .collect(Collectors.toMap(Product::getId, Function.identity()));
 
     for (OrderItem item: purchasedItens){
         Product product = stockMap.get(item.getProduct().getId());
         if (product != null) {
-            long newStock = product.getStock() - item.getQuant();
-            product.setStock(Math.max(newStock,0));
-            productRepository.save(product);
+            if(product.getStock() >= item.getQuant()){
+                long newStock = product.getStock() - item.getQuant();
+                product.setStock(Math.max(newStock,0));
+                productRepository.save(product);
+            } else {
+                throw new RuntimeException("Not enought stock for the product: " + product.getName() + " stock: " + product.getStock());
+            }
+
         }
     }
-
-
     }
 }
 

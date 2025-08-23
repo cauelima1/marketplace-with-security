@@ -1,19 +1,19 @@
 package com.mktpc.marketPlace.repository;
 
-import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.model.Order;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
-import java.util.UUID;
+import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    public Order findByClientName (String name);
+    Order getOrderById (Long id);
 
-    public Order findByUuid (UUID orderId);
+    Order findByClientName (String name);
 
-    public boolean existsByClientName(String name);
+    boolean existsByClientName(String name);
 
 }

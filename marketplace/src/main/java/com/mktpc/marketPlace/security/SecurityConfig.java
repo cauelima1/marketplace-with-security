@@ -34,7 +34,7 @@ public class SecurityConfig {
                                         "/swagger-resources/**",
                                         "/webjars/**"
                                 ).permitAll()
-                                .requestMatchers("/h2-console/**").permitAll()
+                        .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/market/**").hasRole("USER")
                         .requestMatchers("/client/**").hasRole("USER")
                         .requestMatchers("/client/deposit").permitAll()

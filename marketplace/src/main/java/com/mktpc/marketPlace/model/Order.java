@@ -13,37 +13,37 @@ import java.util.UUID;
 public class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.UUID)
-    private UUID uuid;
+    @GeneratedValue(strategy = GenerationType.AUTO)
+    private Long id;
 
+
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name ="client_id")
-    @JsonBackReference
     private Client client;
-
     @OneToMany
     private List<OrderItem> orderItems = new ArrayList<>();
     private double totalPrice;
-    private boolean orderFinish;
+    private boolean orderFinish = false;
 
-    public Order(UUID uuid, Client client, List<OrderItem> productList, double totalPrice, boolean status) {
-        this.uuid = uuid;
+
+    public Order () {
+    }
+
+    public Order(Long id, Client client, List<OrderItem> orderItems, double totalPrice, boolean orderFinish) {
+        this.id = id;
         this.client = client;
-        this.orderItems = new ArrayList<>();
+        this.orderItems = orderItems;
         this.totalPrice = totalPrice;
-        this.orderFinish = status;
+        this.orderFinish = orderFinish;
     }
 
-    public Order() {
-    this.orderFinish=false;
+    public Long getId() {
+        return id;
     }
 
-    public UUID getUuid() {
-        return uuid;
-    }
-
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public Client getClient() {
@@ -58,7 +58,7 @@ public class Order {
         return orderItems;
     }
 
-    public void setorderItems(List<OrderItem> orderItems) {
+    public void setOrderItems(List<OrderItem> orderItems) {
         this.orderItems = orderItems;
     }
 
