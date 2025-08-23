@@ -44,7 +44,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
+        if (request.getServletPath().startsWith("/swagger-ui") ||
+                request.getServletPath().startsWith("/v3/api-docs")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
+        String path = request.getServletPath();
+        if (path.startsWith("/h2-console")) {
+            chain.doFilter(request, response);
+            return;
+        }
 
         if (secret == null || secret.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -70,18 +80,6 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
             Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
             SecurityContextHolder.getContext().setAuthentication(auth);
-
-            String path = request.getRequestURI();
-
-            if (path.startsWith("/swagger-ui") ||
-                    path.startsWith("/v3/api-docs") ||
-                    path.startsWith("/swagger-resources") ||
-                    path.startsWith("/webjars") ||
-                    path.startsWith("/swagger-ui.html")) {
-
-                chain.doFilter(request, response);
-                return;
-            }
 
 
         } catch (JwtException e) {
