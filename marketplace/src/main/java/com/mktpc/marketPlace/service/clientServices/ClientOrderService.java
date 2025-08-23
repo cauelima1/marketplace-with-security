@@ -47,10 +47,6 @@ public class ClientOrderService {
         }
     }
 
-
-
-
-
     public Map<String ,  ClientDtoResponse> getClientsDto () {
         List<OrderDtoResponse> ordersDto = orderService.getOrderDTO();
 

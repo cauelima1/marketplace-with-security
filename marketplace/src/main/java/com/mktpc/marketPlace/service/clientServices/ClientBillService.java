@@ -5,10 +5,12 @@ import com.mktpc.marketPlace.repository.ClientRepository;
 import com.mktpc.marketPlace.repository.OrderRepository;
 import com.mktpc.marketPlace.repository.ProductRepository;
 import com.mktpc.marketPlace.service.DeliveryService;
+import com.mktpc.marketPlace.service.OrderService;
 import com.mktpc.marketPlace.service.ProductService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,23 +36,28 @@ public class ClientBillService {
     private ClientRepository clientRepository;
 
     @Autowired
+    private OrderService orderService;
+
+    @Autowired
     private ClientOrderService clientOrderService;
 
     public Delivery finishOrder (Long orderId) {
-        Order order = orderRepository.getOrderById(orderId);
-        if(order != null && !order.isOrderFinish()) {
+
+        Optional<Order> order = orderRepository.findById(orderId);
+
+        if(order.isPresent() && !order.get().isOrderFinish()) {
             Client client = clientRepository.findByName(clientOrderService.getLogin());
-            List<OrderItem> itemsInOrder = order.getOrderItems();
-            updateStockProducts(itemsInOrder);
-                if (client.getBalance() >= order.getTotalPrice()) {
-                    client.setBalance(client.getBalance() - order.getTotalPrice());
-                    clientRepository.save(client);
+            List<OrderItem> itemsInOrder = order.get().getOrderItems();
+                if (client.getBalance() >= order.get().getTotalPrice()) {
+                    updateStockProducts(itemsInOrder);
+                    client.setBalance(client.getBalance() - order.get().getTotalPrice());
+                    orderService.saveOrderInClient(order.get());
+                    return deliveryService.turnOrderIntoDelivery(order.get());
                 } else {
                     throw new RuntimeException("insufficient money. R$" + client.getBalance() + " available.");
                 }
-            return deliveryService.turnOrderIntoDelivery(order);
             } else {
-            throw new RuntimeException("Verify the Order id");
+            throw new RuntimeException("Order is null. Add items to your order.");
             }
     }
 

@@ -2,6 +2,7 @@ package com.mktpc.marketPlace.controller;
 
 import com.mktpc.marketPlace.model.Delivery;
 import com.mktpc.marketPlace.model.Order;
+import com.mktpc.marketPlace.model.OrderItem;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
 import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.service.OrderService;
@@ -28,9 +29,9 @@ public class OrderController {
     private OrderService orderService;
 
     @PostMapping("/{idProduct}")
-    public ResponseEntity<Order> order (@PathVariable Long idProduct, @RequestBody OrderDtoRequest orderDtoRequest){
-        Order order = orderService.issueOrder(idProduct, orderDtoRequest);
-        return ResponseEntity.ok().body(order);
+    public ResponseEntity<OrderItem> order (@PathVariable Long idProduct, @RequestBody OrderDtoRequest orderDtoRequest){
+        OrderItem item = orderService.issueOrder(idProduct, orderDtoRequest);
+        return ResponseEntity.ok().body(item);
     }
 
     @GetMapping("/finishOrder/{orderId}")

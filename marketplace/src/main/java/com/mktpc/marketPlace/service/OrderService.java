@@ -47,50 +47,50 @@ public class OrderService {
     @Lazy
     private ClientOrderService clientService;
 
-    public Order issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
-        if(!clientRepository.existsByName(clientService.getLogin())) {
+    public OrderItem issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
+        Client client = clientRepository.findByName(clientService.getLogin());
+        if(client == null) {
             clientService.firstLogin(0D);
         }
-        List<Order> orders = orderRepository.findAll().stream().filter(o-> o.getClient().equals(clientService.getLogin())).toList();
-        if (orders.isEmpty()){
-            Optional<Product> stockProduct = productRepository.findById(idProduct);
-            if (stockProduct.isPresent()) {
-                return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
-            } else {
-                throw new RuntimeException("Product Id does not exist.");
-            }
-        } else {
+        assert client != null;
+        List<Order> allOrderClient = client.getOrders();
+
+        List<Order> ordersFinished = allOrderClient.stream().filter(Order::isOrderFinish).toList();
+
+        if (allOrderClient.isEmpty()) {
+            return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
+        } else if (!allOrderClient.isEmpty() && ordersFinished.isEmpty()){
             return addProductsToExistingOrder(idProduct, orderDtoRequest.quant());
+        } else if (!ordersFinished.isEmpty()){
+            return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
         }
+        return null;
+        }
+
+
+    public OrderItem addProductsToNewOrder (Long idProduct, Long quant){
+        if (productRepository.existsById(idProduct)){
+            Order newOrder = new Order();
+            newOrder.setClient(clientRepository.findByName(clientService.getLogin()));
+            OrderItem item = addItemToOrder(idProduct, quant);
+            newOrder.addOrderItem(item);
+            newOrder.setTotalPrice(item.getSubtotal());
+            orderRepository.save(newOrder);
+            return item;
+        } else {
+            throw new RuntimeException("Id product not exist.");
+        }
+
     }
 
-    public Order addProductsToNewOrder (Long idProduct, Long quant){
-        Order newOrder = new Order();
-        newOrder.setClient(clientRepository.findByName(clientService.getLogin()));
-        OrderItem item = addItemToOrder(idProduct, quant);
-        newOrder.getOrderItems().add(item);
-        newOrder.setTotalPrice(item.getSubtotal());
-        itemRepository.save(item);
-        orderRepository.save(newOrder);
-        saveOrderInClient(newOrder);
-        return newOrder;
-    }
-
-    public Order addProductsToExistingOrder (Long idProduct, Long quant){
+    public OrderItem addProductsToExistingOrder (Long idProduct, Long quant){
         if (productRepository.existsById(idProduct)) {
-            Order existingOrder = orderRepository.findByClientName(clientService.getLogin());
-            if (!existingOrder.isOrderFinish()) {
+                Order existingOrder = orderRepository.findByClientName(clientService.getLogin());
                 OrderItem item = addItemToOrder(idProduct, quant);
-                existingOrder.getOrderItems().add(item);
+                existingOrder.addOrderItem(item);
                 existingOrder.setTotalPrice(item.getSubtotal() + existingOrder.getTotalPrice());
-                itemRepository.save(item);
                 orderRepository.save(existingOrder);
-                saveOrderInClient(existingOrder);
-                return existingOrder;
-            } else {
-                orderRepository.delete(existingOrder);
-                throw new RuntimeException("No orders available.");
-            }
+                return item;
         } else {
             throw new RuntimeException("Inexisting Id Product.");
         }
@@ -98,18 +98,19 @@ public class OrderService {
 
     public void saveOrderInClient(Order newOrder){
         Client client = clientRepository.findByName(clientService.getLogin());
-        client.getOrders().add(newOrder);
+        client.addOrder(newOrder);
         clientRepository.save(client);
     }
 
     public OrderItem addItemToOrder (Long idProduct, Long quant){
-        if (productRepository.existsById(idProduct)){
-        Product product = productRepository.findById(idProduct).get();
-        OrderItem item = new OrderItem();
-        item.setProduct(product);
-        item.setQuant(quant);
-        item.setUnitprice(product.getPriceProduct());
-        return item;
+        if (productRepository.findById(idProduct).isPresent()){
+            Product product = productRepository.findById(idProduct).get();
+            OrderItem item = new OrderItem();
+            item.setProduct(product);
+            item.setQuant(quant);
+            item.setUnitprice(product.getPriceProduct());
+            itemRepository.save(item);
+            return item;
         } else {
             throw new RuntimeException("Inexisting Id Product.");
         }

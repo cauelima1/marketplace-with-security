@@ -73,6 +73,10 @@ public class Order {
     public boolean isOrderFinish() {
         return orderFinish;
     }
+    public void addOrderItem(OrderItem item) {
+        this.orderItems.add(item);
+    }
+
 
     public void setOrderFinish(boolean orderFinish) {
         this.orderFinish = orderFinish;
