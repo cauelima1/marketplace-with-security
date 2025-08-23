@@ -20,6 +20,7 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
@@ -40,21 +41,31 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private String secret;
 
 
+    private static final List<String> PUBLIC_PATHS = List.of(
+            "/swagger-ui/**",
+            "/swagger-ui.html",
+            "/v3/api-docs/**",
+            "/swagger-resources/**",
+            "/webjars/**",
+            "/h2-console/**"
+    );
+
+    private final AntPathMatcher pathMatcher = new AntPathMatcher();
+
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        if (request.getServletPath().startsWith("/swagger-ui") ||
-                request.getServletPath().startsWith("/v3/api-docs")) {
+        String path = request.getServletPath();
+
+        boolean isPublic = PUBLIC_PATHS.stream()
+                .anyMatch(p -> pathMatcher.match(p, path));
+
+        if (isPublic) {
             chain.doFilter(request, response);
             return;
         }
 
-        String path = request.getServletPath();
-        if (path.startsWith("/h2-console")) {
-            chain.doFilter(request, response);
-            return;
-        }
 
         if (secret == null || secret.isEmpty()) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
