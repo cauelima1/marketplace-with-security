@@ -4,6 +4,7 @@ import com.mktpc.marketPlace.model.Client;
 import com.mktpc.marketPlace.model.Order;
 import com.mktpc.marketPlace.model.OrderItem;
 import com.mktpc.marketPlace.model.Product;
+import com.mktpc.marketPlace.model.dtos.dtosRequest.ItemDeleteDTORequest;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
 import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.repository.ClientRepository;
@@ -14,8 +15,9 @@ import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
+
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -27,6 +29,9 @@ public class OrderService {
     @Autowired
     @Lazy
     private ClientOrderService clientOrderService;
+
+    @Autowired
+    private OrderItemRepository orderItemRepository;
 
     @Autowired
     private OrderItemRepository itemRepository;
@@ -47,32 +52,26 @@ public class OrderService {
     @Lazy
     private ClientOrderService clientService;
 
-    public OrderItem issueOrder (Long idProduct, OrderDtoRequest orderDtoRequest){
-        Client client = clientRepository.findByName(clientService.getLogin());
-        if(client == null) {
+    public OrderItem issueOrder(Long idProduct, OrderDtoRequest orderDtoRequest) {
+        if (!clientRepository.existsByName(clientOrderService.getLogin())) {
             clientService.firstLogin(0D);
         }
-        assert client != null;
-        List<Order> allOrderClient = client.getOrders();
+        Client client = clientRepository.findByName(clientOrderService.getLogin());
+        List<Order> orderOpen = client.getOrders().stream().filter(o-> !o.isOrderFinish()).toList();
 
-        List<Order> ordersFinished = allOrderClient.stream().filter(Order::isOrderFinish).toList();
-
-        if (allOrderClient.isEmpty()) {
+        if (orderOpen.isEmpty()) {
             return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
-        } else if (!allOrderClient.isEmpty() && ordersFinished.isEmpty()){
+        } else  {
             return addProductsToExistingOrder(idProduct, orderDtoRequest.quant());
-        } else if (!ordersFinished.isEmpty()){
-            return addProductsToNewOrder(idProduct, orderDtoRequest.quant());
         }
-        return null;
-        }
-
+    }
 
     public OrderItem addProductsToNewOrder (Long idProduct, Long quant){
+
         if (productRepository.existsById(idProduct)){
             Order newOrder = new Order();
             newOrder.setClient(clientRepository.findByName(clientService.getLogin()));
-            OrderItem item = addItemToOrder(idProduct, quant);
+            OrderItem item = addItemToOrder(newOrder, idProduct, quant);
             newOrder.addOrderItem(item);
             newOrder.setTotalPrice(item.getSubtotal());
             orderRepository.save(newOrder);
@@ -80,19 +79,26 @@ public class OrderService {
         } else {
             throw new RuntimeException("Id product not exist.");
         }
-
     }
 
     public OrderItem addProductsToExistingOrder (Long idProduct, Long quant){
-        if (productRepository.existsById(idProduct)) {
-                Order existingOrder = orderRepository.findByClientName(clientService.getLogin());
-                OrderItem item = addItemToOrder(idProduct, quant);
+
+        Order existingOrder = orderRepository.findAll().stream().filter(o->
+                !o.isOrderFinish() && o.getClient().getName().equals(clientOrderService.getLogin()))
+                .findFirst()
+                .orElse(null);
+
+        if (existingOrder != null)
+            if (productRepository.existsById(idProduct)) {
+                OrderItem item = addItemToOrder(existingOrder, idProduct, quant);
                 existingOrder.addOrderItem(item);
                 existingOrder.setTotalPrice(item.getSubtotal() + existingOrder.getTotalPrice());
                 orderRepository.save(existingOrder);
                 return item;
-        } else {
-            throw new RuntimeException("Inexisting Id Product.");
+            } else {
+                throw new RuntimeException("Inexisting Id Product.");
+            } else {
+                throw new RuntimeException("Order error.");
         }
     }
 
@@ -102,7 +108,7 @@ public class OrderService {
         clientRepository.save(client);
     }
 
-    public OrderItem addItemToOrder (Long idProduct, Long quant){
+    public OrderItem addItemToOrder (Order order, Long idProduct, Long quant){
         if (productRepository.findById(idProduct).isPresent()){
             Product product = productRepository.findById(idProduct).get();
             OrderItem item = new OrderItem();
@@ -115,7 +121,6 @@ public class OrderService {
             throw new RuntimeException("Inexisting Id Product.");
         }
     }
-
 
     public Order getUserOrder (){
       return orderRepository.findByClientName(clientService.getLogin());
@@ -130,5 +135,40 @@ public class OrderService {
         return orders.stream()
                 .map(OrderDtoResponse::new)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public void deledeOrder (Long orderId){
+        Order order = orderRepository.findAll().stream().filter(o-> o.getId().equals(orderId)).findFirst().orElse(null);
+        if (order != null && order.getClient().getName().equals(clientOrderService.getLogin())){
+            if(!order.isOrderFinish())
+                orderRepository.delete(order);
+            else
+                throw new RuntimeException("Order already closed.");
+        } else {
+            throw new RuntimeException("Order Id not exists.");
+        }
+    }
+
+    @Transactional
+    public Order deleteItem(Long orderId, ItemDeleteDTORequest itemDelete){
+        Optional<Order> order = orderRepository.findById(orderId);
+        Optional<OrderItem> itemToRemove = orderItemRepository.findById(itemDelete.itemId());
+        if (order.isPresent()) {
+            if(itemToRemove.isPresent() && order.get().getClient().getName().equals(clientOrderService.getLogin())){
+                if (!order.get().isOrderFinish()) {
+                    order.get().getOrderItems().removeIf(item -> item.getId().equals(itemDelete.itemId()));
+                    orderItemRepository.delete(itemToRemove.get());
+                    return orderRepository.save(order.get());
+                } else {
+                    throw new RuntimeException("Order already closed.");
+                }
+            } else{
+                throw new RuntimeException("Item Id not exists.");
+            }
+        } else {
+            throw new RuntimeException("Order id not exists.");
+        }
+
     }
 }

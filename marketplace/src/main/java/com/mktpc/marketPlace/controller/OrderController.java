@@ -3,11 +3,13 @@ package com.mktpc.marketPlace.controller;
 import com.mktpc.marketPlace.model.Delivery;
 import com.mktpc.marketPlace.model.Order;
 import com.mktpc.marketPlace.model.OrderItem;
+import com.mktpc.marketPlace.model.dtos.dtosRequest.ItemDeleteDTORequest;
 import com.mktpc.marketPlace.model.dtos.dtosRequest.OrderDtoRequest;
 import com.mktpc.marketPlace.model.dtos.dtosResponse.OrderDtoResponse;
 import com.mktpc.marketPlace.service.OrderService;
 import com.mktpc.marketPlace.service.clientServices.ClientBillService;
 import com.mktpc.marketPlace.service.clientServices.ClientOrderService;
+import org.hibernate.cache.spi.support.AbstractReadWriteAccess;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +44,17 @@ public class OrderController {
 
     @GetMapping("/all")
     public ResponseEntity<List<Order>> getOrders(){
-        return ResponseEntity.ok(clientOrderService.getClientOrder()); //arrumar
+        return ResponseEntity.ok(clientOrderService.getClientOrder());
+    }
+
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<?> deleteOpenOrder(@PathVariable Long orderId){
+        orderService.deledeOrder(orderId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/item/{orderId}")
+    public ResponseEntity<Order> deleteProduct(@PathVariable Long orderId, @RequestBody ItemDeleteDTORequest productId){
+        return ResponseEntity.ok(orderService.deleteItem(orderId, productId));
     }
  }

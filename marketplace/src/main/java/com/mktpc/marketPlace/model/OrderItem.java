@@ -1,6 +1,7 @@
 package com.mktpc.marketPlace.model;
 
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 
 @Entity
@@ -9,10 +10,24 @@ public class OrderItem {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @ManyToOne
+
+    @OneToOne
     private Product product;
     private Long quant;
     private Double unitPrice;
+
+    public OrderItem(){
+
+    }
+
+    public Double getUnitPrice() {
+        return unitPrice;
+    }
+
+    public void setUnitPrice(Double unitPrice) {
+        this.unitPrice = unitPrice;
+    }
+
 
     public Long getId() {
         return id;

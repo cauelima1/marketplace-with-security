@@ -27,14 +27,13 @@ public class DeliveryService {
     private OrderRepository orderRepository;
 
     public Delivery turnOrderIntoDelivery (Order orderToFinished){
-        orderToFinished.setOrderFinish(true);
         orderRepository.save(orderToFinished);
         if (orderToFinished.isOrderFinish()){
             LocalDate time = LocalDate.now();
             Delivery delivery = new Delivery(orderToFinished, time);
             return deliveryRepository.save(delivery);
         } else{
-            return null;
+            throw new RuntimeException("Error on saving order");
         }
     }
 

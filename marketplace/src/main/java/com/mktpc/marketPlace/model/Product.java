@@ -17,8 +17,11 @@ public class Product {
     private Long stock;
     private double priceProduct;
 
+
     public Product (){
     }
+
+
 
     public Product(Long id, String name, String productDetails, CategoryProduct categoryProduct, Long stock, double priceProduct) {
         this.id = id;
@@ -76,4 +79,6 @@ public class Product {
     public void setPriceProduct(double priceProduct) {
         this.priceProduct = priceProduct;
     }
+
+
 }

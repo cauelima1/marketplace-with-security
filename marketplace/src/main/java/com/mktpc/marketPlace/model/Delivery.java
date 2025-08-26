@@ -19,7 +19,6 @@ public class Delivery {
     private LocalDate orderTime;
 
     public Delivery(){
-
     }
 
     public Delivery(Order finalizedOrder, LocalDate orderTime) {
